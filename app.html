@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title></title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="contact.css">
+  </head>
+  <body>
+    <div class="loader">
+      <div class="spinner">
+        <div class="rect1"></div>
+        <div class="rect2"></div>
+        <div class="rect3"></div>
+        <div class="rect4"></div>
+      </div>
+    </div>
+    <form class="form hidden" autocomplete="off">
+    <input autocomplete="false" name="hidden" type="text" style="display:none;">
+    <div class="form-intro"></div>
+    <div class="form-group">
+      <label for="name" id="name-label">Name</label>
+      <input type="text" id="name" name="name">
+    </div>
+    <div class="form-group">
+      <label for="email" id="email-label">Email</label>
+      <input type="email" id="email" name="email">
+    </div>
+    <div class="form-group found-address"></div>
+    <div id="extra-address-fields" style="display: none;">
+      <div class="form-group">
+        <label for="address1" id="address1-label">Address Line 1</label>
+        <input type="text" id="address1" name="address1">
+      </div>
+      <div class="form-group">
+        <label for="address2" id="address2-label">Address Line 2</label>
+        <input type="text" id="address2" name="address2">
+      </div>
+      <div class="form-group">
+        <label for="city" id="city-label">City</label>
+        <input type="text" id="city" name="city">
+      </div>
+      <div class="form-group">
+        <label for="province" id="province-label">Province</label>
+        <input type="text" id="province" name="province">
+      </div>
+      <div class="form-group">
+        <label for="country" id="country-label">Country</label>
+        <input type="text" id="country" name="country" value="Canada">
+      </div>
+    </div>
+    <div class="form-group">
+        <label for="postal-code" id="postal-code-label">Postal Code</label>
+        <input type="text" id="postal-code" name="postal-code">
+      </div>
+    <div class="form-group change-riding" style="display: none;">
+      <label for="riding" id="riding-label">Riding</label>
+      <input type="text" name="riding" id="riding" class="">
+    </div>
+    <div class="form-group found-riding">
+    </div>
+    <div class="form-group">
+      <label for="message" id="message-label">Your Message</label>
+      <textarea id="message" name="message" rows="6" cols="30"></textarea>
+      <pre id="fixed-message" style="display: none;"></pre>
+    </div>
+    <div class="form-group contact-opt-in hidden">
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" id="contact" name="contact" value="1"/> <span class="contact-opt-in-text"></span>
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="error"></div>
+      <button type="submit" class="btn btn-submit">Make My Voice Heard</button>
+      <a class="twitter-button btn btn-submit" href="" target="_blank" style="display: none;">Tweet</a>
+    </div>
+    </form>
+    <div class="load-error hidden">
+      <p id="error-message">Sorry, there was an error loading the form. Please try again later.</p>
+    </div>
+    <div class="success hidden">
+      <p id="thank-you-message">Thanks for your support!</p>
+    </div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBDbW_KH9VXVNGMfBkehe4HCUiL8YD_DBw&libraries=places"></script>
+    <script async src="contact.js" charset="utf-8"></script>
+  </body>
+</html>
