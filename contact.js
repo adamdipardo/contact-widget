@@ -24,6 +24,7 @@ var districtName;
 var tweetMessage;
 var tweetVia;
 var isFullAddress;
+var customFields;
 
 // get query params
 var urlParams;
@@ -157,6 +158,32 @@ xhr.onload = function() {
             setTwitterURL();
         }
 
+        // add custom fields
+        if (responseJson.fields && responseJson.fields.length > 0) {
+            customFields = responseJson.fields;
+
+            for (var i = 0; i < responseJson.fields.length; i++) {
+                var fieldContainer = document.createElement('div');
+                fieldContainer.className = 'form-group';
+
+                var fieldLabel = document.createElement('label');
+                fieldLabel.htmlFor = responseJson.fields[i].slug;
+                fieldLabel.innerHTML = responseJson.fields[i].name;
+
+                fieldContainer.appendChild(fieldLabel);
+
+                var field = document.createElement('input');
+                field.setAttribute('name', responseJson.fields[i].slug);
+                field.setAttribute('id', responseJson.fields[i].slug);
+                field.setAttribute('class', responseJson.fields[i].slug);
+                field.setAttribute('type', 'text');
+
+                fieldContainer.appendChild(field);
+
+                document.getElementsByClassName('contact-custom-fields-container')[0].appendChild(fieldContainer);
+            }
+        }
+
         // show form
         document.getElementsByClassName('form')[0].classList.remove('hidden');
 
@@ -217,6 +244,24 @@ function onFormSubmit(e) {
         }
     }
 
+    // check for missing custom fields
+    var hasMissingCustomFields = false;
+    var missingCustomFields = [];
+    if (customFields && customFields.length > 0) {
+        for (var i = 0; i < customFields.length; i++) {
+            if (customFields[i].isRequired == true) {
+                var customField = document.getElementById('contact-custom-fields-container')
+                    .getElementsByClassName(customFields[i].slug)[0];
+
+                if (!customField.value || !customField.value.trim()) {
+                    hasMissingCustomFields = true;
+                    missingCustomFields.push('<i class="fa fa-exclamation-triangle"></i> Please enter a value for ' + customFields[i].name);
+                }
+
+            }
+        }
+    }
+
     if (hasMissingFields) {
         var errorStr = '<i class="fa fa-exclamation-triangle"></i> ';
         errorStr += language == 'en' ? 'Please fill in all fields.' : 'Veuillez remplir tous les champs.';
@@ -240,6 +285,10 @@ function onFormSubmit(e) {
         setErrorMessage(errorStr);
         document.getElementById('error-address-prompt').addEventListener('click', onAddressPromptClick, false);
     }*/
+    else if (hasMissingCustomFields) {
+        var errorStr = missingCustomFields.join('<br />');
+        setErrorMessage(errorStr);
+    }
     else if (isFullAddress) {
         // check for complete manul address
         var address1 = document.getElementById('address1'),
@@ -612,11 +661,27 @@ function submitForm(fields) {
     if (isFullAddress)
         addressComponents = '&address=' + address + '&city=' + city + '&province=' + province + '&country=' + country;
 
+    // get cusotm field info
+    var filteredFields = [];
+    if (customFields && customFields.length > 0) {
+        for (var i = 0; i < customFields.length; i++) {
+            var field = document.getElementById("contact-custom-fields-container")
+                .getElementsByClassName(customFields[i].slug)[0];
+
+            if (customFields[i].isRequired == true || field.value) {
+                filteredFields.push({
+                    id: customFields[i].id,
+                    value: field.value
+                });
+            }
+        }
+    }
+
     // send alert
     var alertXhr = new XMLHttpRequest();
     alertXhr.open('POST', encodeURI('/api/campaigns/' + urlParams.campaign + '/entries/alerts/create'));
     alertXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    alertXhr.send(encodeURI('name=' + fields[0].value + '&email=' + fields[1].value + '&postalCode=' + postalCode + addressComponents + '&canContact=' + contactOptIn + '&lat=' + latitude + '&long=' + longitude + '&ridingName=' + document.getElementById('riding').value + (customMessage ? '&message=' + customMessage : '') + '&type=' + (isTwitter ? 'twitter' : 'email')));
+    alertXhr.send(encodeURI('name=' + fields[0].value + '&email=' + fields[1].value + '&postalCode=' + postalCode + addressComponents + '&canContact=' + contactOptIn + '&lat=' + latitude + '&long=' + longitude + '&ridingName=' + document.getElementById('riding').value + (customMessage ? '&message=' + customMessage : '') + '&type=' + (isTwitter ? 'twitter' : 'email') + '&fields=' + JSON.stringify(filteredFields)));
 
     // send request
     var xhr = new XMLHttpRequest();
@@ -646,7 +711,7 @@ function submitForm(fields) {
         }
     };
 
-    xhr.send(encodeURI('name=' + fields[0].value + '&email=' + fields[1].value + addressComponents + '&postalCode=' + postalCode + '&canContact=' + contactOptIn + '&lat=' + latitude + '&long=' + longitude + '&ridingId=' + ridingId + (customMessage ? '&message=' + customMessage : '') + '&type=' + (isTwitter ? 'twitter' : 'email')));
+    xhr.send(encodeURI('name=' + fields[0].value + '&email=' + fields[1].value + addressComponents + '&postalCode=' + postalCode + '&canContact=' + contactOptIn + '&lat=' + latitude + '&long=' + longitude + '&ridingId=' + ridingId + (customMessage ? '&message=' + customMessage : '') + '&type=' + (isTwitter ? 'twitter' : 'email') + '&fields=' + JSON.stringify(filteredFields)));
 }
 
 if (isTwitter) {
@@ -668,7 +733,7 @@ function setTwitterURL(tweetTo) {
     else
         tweetTo = "";
 
-    document.getElementsByClassName('twitter-button')[0].setAttribute('href', 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(replaceTwitterMergeTags(tweetTo, tweetMessage)) + '&url=' + urlParams.pageUrl + (tweetVia ? '&via=' + tweetVia : '') + (tweetTo ? '&to=' + tweetTo : ''));
+    document.getElementsByClassName('twitter-button')[0].setAttribute('href', 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(replaceTwitterMergeTags(tweetTo, tweetMessage)) + (tweetVia ? '&via=' + tweetVia : '') + (tweetTo ? '&to=' + tweetTo : ''));
 }
 
 function replaceTwitterMergeTags(tweetTo, tweetMessage) {
