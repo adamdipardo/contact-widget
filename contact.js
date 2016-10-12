@@ -373,7 +373,8 @@ function onAddressKeyDown(e) {
 function onPostalCodeKeyUp(e) {
 
     if (/[a-zA-z][0-9][a-zA-z][ ]?[0-9][a-zA-z][0-9]/.test(e.target.value))
-        getRidingAndCandidatesFromPostalCode(e.target.value);
+        getRidingAndCandidatesFromPostalCodeGeo(e.target.value);
+        // getRidingAndCandidatesFromPostalCode(e.target.value);
 }
 
 function onPlaceChanged(e) {
@@ -545,6 +546,22 @@ function getRidingAndCandidates(lat, long) {
         }
     }
     xhr.send();
+}
+
+function getRidingAndCandidatesFromPostalCodeGeo(postalCode) {
+
+    // get lat long from postal code
+    geocoder.geocode({address: postalCode}, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            matchedAddress = results[0];
+            getRidingAndCandidates(matchedAddress.geometry.location.lat(), matchedAddress.geometry.location.lng());
+        }
+        else {
+            var errorStr = '<i class="fa fa-exclamation-triangle"></i> ';
+            errorStr += 'Error: ' + status;
+            setErrorMessage(errorStr);
+        }
+    });
 }
 
 function getRidingAndCandidatesFromPostalCode(postalCode) {
