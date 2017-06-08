@@ -119,7 +119,7 @@ form.form {
     font-weight: bold;
   }
 
-  input, textarea, select {
+  input, textarea, select, div#message {
     display: block;
     width: 100%;
     border-radius: 0;
@@ -131,9 +131,10 @@ form.form {
     border: 1px solid #CCC;
   }
 
-  textarea {
+  div#message {
     resize:none;
     min-height: 150px;
+    white-space: pre-wrap;
   }
 
   button, a.btn.btn-submit {

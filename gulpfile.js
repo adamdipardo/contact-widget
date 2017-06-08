@@ -6,6 +6,7 @@ var minifyCss = require('gulp-minify-css');
 var webserver = require('gulp-webserver');
 var insert = require('gulp-insert');
 var argv = require('yargs').argv;
+var colors = require('colors');
 
 gulp.task('sass', function () {
 	gulp.src('./*.scss')
@@ -17,7 +18,7 @@ gulp.task('sass:watch', function () {
 	gulp.watch('./*.scss', ['sass']);
 });
 
-gulp.task('html', function () {    
+gulp.task('html', function () {
 	return gulp.src('*.{html,php}')
 		.pipe(gulp.dest('build'));
 });
@@ -50,7 +51,7 @@ gulp.task('inline', function() {
 		base: '',
 		js: uglify(),
 		css: minifyCss(),
-		disabledTypes: ['svg', 'img'], // Only inline css files 
+		disabledTypes: ['svg', 'img'], // Only inline css files
 		ignore: []
 		}))
   	.pipe(gulp.dest('dist/'));
@@ -93,6 +94,17 @@ gulp.task('webserver', function() {
     }));
 });
 
+gulp.task('announce', function() {
+
+	if (argv.env == 'production')
+		console.log('\n!!!!!!!!!!!!!!!!!!!!!!!\n!!! PRODUCTION MODE !!!\n!!!!!!!!!!!!!!!!!!!!!!!\n'.inverse);
+	else if (argv.env == 'dev')
+		console.log('dev mode');
+	else
+		console.log('local mode');
+
+});
+
 gulp.task('default', ['webserver', 'images', 'images:watch', 'html', 'html:watch', 'sass', 'sass:watch', 'scripts:watch']);
-gulp.task('build-only', ['images', 'html', 'sass', 'widget']);
+gulp.task('build-only', ['announce', 'images', 'html', 'sass', 'widget']);
 gulp.task('create-dist', ['inline', 'widget-dist']);

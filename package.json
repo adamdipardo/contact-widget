@@ -9,6 +9,7 @@
   "author": "Adam Di Pardo",
   "license": "ISC",
   "devDependencies": {
+    "colors": "^1.1.2",
     "gulp-inline": "*",
     "gulp-insert": "^0.5.0",
     "gulp-minify-css": "^1.2.1",

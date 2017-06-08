@@ -25,6 +25,8 @@ var tweetMessage;
 var tweetVia;
 var isFullAddress;
 var customFields;
+var mergeTags = [];
+var fullAddressFields = ['address1','address2','city','province','country','postal-code'];
 
 // get query params
 var urlParams;
@@ -86,7 +88,7 @@ xhr.onload = function() {
             document.getElementById('message-label').parentNode.removeChild(document.getElementById('message-label'));
         }
         else
-            messageField.value = responseJson.message;
+            messageField.innerHTML = responseJson.message;
 
         // set french labels if needed
         language = responseJson.language;
@@ -99,8 +101,8 @@ xhr.onload = function() {
                 document.getElementById('address').setAttribute('placeholder', 'Tapez pour sélectionner une adresse');
             }
             else {
-                document.getElementById('address-label').innerHTML = 'Code Postal';
-                document.getElementById('address').setAttribute('placeholder', 'Tapez pour sélectionner une Code Postal');
+                document.getElementById('postal-code-label').innerHTML = 'Code Postal';
+                document.getElementById('postal-code').setAttribute('placeholder', 'Tapez pour sélectionner un code postal');
             }
 
             document.getElementById('error-message').innerHTML = 'S\'il vous plaît essayez plus tard';
@@ -111,7 +113,7 @@ xhr.onload = function() {
             document.getElementById('province-label').innerHTML = 'Province';
             document.getElementById('country-label').innerHTML = 'Région';
             document.getElementById('postal-code-label').innerHTML = 'Code Postal';
-            document.getElementById('address-prompt').innerHTML = 'Si votre adresse ne semble pas , cliquez ici pour essayer d\'entrer manuellement'
+            // document.getElementById('address-prompt').innerHTML = 'Si votre adresse ne semble pas , cliquez ici pour essayer d\'entrer manuellement'
             document.getElementById('riding-label').innerHTML = 'Circonscription';
 
             if (!responseJson.lockMessage && !isTwitter)
@@ -182,6 +184,69 @@ xhr.onload = function() {
 
                 document.getElementsByClassName('contact-custom-fields-container')[0].appendChild(fieldContainer);
             }
+        }
+
+        // merge-fields autofill
+        var foundMergeTags = getAllMergeTags(message);
+
+        // did we find merge tags?
+        if ( foundMergeTags && foundMergeTags.length > 0 ) {
+
+            // loop through found tags
+            for (var i = 0; i < foundMergeTags.length; i++) {
+
+                // array for all form elements associated with the tag
+                var formIds;
+
+                // figure out form elements associated with tag
+                switch(foundMergeTags[i]) {
+                    case '*|SENDER_NAME|*':
+                        formIds = ['name'];
+                        break;
+                    case '*|ADDRESS|*':
+                        if (isFullAddress)
+                            formIds = ['address1', 'address2', 'city', 'province', 'country', 'postal-code'];
+                        else
+                            formIds = ['postal-code'];
+                        break;
+                    case '*|RIDING|*':
+                        formIds = ['riding'];
+                        break;
+                    default:
+                        // TO-DO.. handle custom fields
+                        break;
+                }
+
+                // add event handlers for all needed form inputs
+                for (var x = 0; x < formIds.length; x++)
+                    document.getElementById(formIds[x]).addEventListener('input', updateMergeTag, false);
+
+                // add tag to global list
+                mergeTags.push({
+                    ids:formIds,
+                    tag:foundMergeTags[i],
+                    cleanTag: getCleanMergeTag(foundMergeTags[i])
+                });
+
+            }
+
+            // add in placeholder spans
+            updateProperMessageText(addMergeTagPlaceholders(mergeTags, message));
+
+            // add placeholder tags
+
+            // check for SENDER_NAME
+            // if ( foundMergeTags.indexOf("*|SENDER_NAME|*") > -1 ) {
+            //     document.getElementById('name').addEventListener('input', updateMergeTag, false);
+            //     mergeTags.push({
+            //         id:'name',
+            //         tag:'*|SENDER_NAME|*',
+            //         cleanTag: getCleanMergeTag('*|SENDER_NAME|*')
+            //     });
+            // }
+
+            // check for ADDRESS
+            // check for RIDING
         }
 
         // show form
@@ -461,6 +526,14 @@ function setRidingInfo(name, candidates, showLoading) {
                 setTwitterURL(candidatesTwitter.join(','));
             else
                 setTwitterURL();
+
+            // merge tag
+            for (var i = 0; i < mergeTags.length; i++) {
+                if (mergeTags[i].tag == "*|RIDING|*") {
+                    replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, ridingName);
+                    break;
+                }
+            }
         }
         else {
             ridingInfoContainer.innerHTML = '';
@@ -758,6 +831,191 @@ function replaceTwitterMergeTags(tweetTo, tweetMessage) {
     return tweetMessage.replace("*|HANDLE|*", tweetTo);
 
 }
+
+function getAllMergeTags(message) {
+
+    var mergeRegex = /(\*\|\w+\|\*)/g;
+
+    var allTags = message.match(mergeRegex);
+
+    var filteredTags = [];
+
+    for (var i = 0 ; i < allTags.length; i++) {
+        if (filteredTags.indexOf(allTags[i]) == -1)
+            filteredTags.push(allTags[i]);
+    }
+
+    return filteredTags;
+
+}
+
+function addMergeTagPlaceholders(mergeTags, message) {
+
+    for (var i = 0; i < mergeTags.length; i++) {
+        var replaceTag = "\\*\\|"+mergeTags[i].cleanTag+"\\|\\*";
+        var re = new RegExp(replaceTag, "g");
+        message = message.replace(re, '<span class="tag-' + mergeTags[i].cleanTag + '">' + mergeTags[i].tag + '</span>');
+    }
+
+    console.log(message);
+
+    return message;
+
+}
+
+function getCleanMergeTag(tag) {
+
+    // console.log(tag.match(/\*\|(\w+)\|\*/g));
+    return tag.match(/\*\|(\w+)\|\*/)[1];
+
+}
+
+/*
+function updateMergeTag(e) {
+
+    // get field
+    for (var i = 0; i < mergeTags.tags.length; i++) {
+        if (mergeTags.tags[i].id == e.target.id) {
+            var messageText = getProperMessageText();
+
+            for (var x = mergeTags.tags[i].locations.length - 1; x >= 0 ; x--) {
+
+                messageText = messageText.slice(0, mergeTags.tags[i].locations[x]) + e.target.value + messageText.slice(mergeTags.tags[i].locations[x] + mergeTags.tags[i].length);
+
+                // update locations
+                for (var z = x + 1; z < mergeTags.tags[i].locations.length; z++) {
+                    console.log(z);
+                    console.log(mergeTags.tags[i].locations[z]);
+                    console.log(e.target.value.length);
+                    mergeTags.tags[i].locations[z] += e.target.value.length - mergeTags.tags[i].length;
+                    console.log(mergeTags.tags[i].locations[z]);
+                }
+            }
+
+            // messageText = messageText.replace(mergeTags.tags[i].tag, e.target.value);
+            mergeTags.tags[i].length = e.target.value.length;
+
+            updateProperMessageText(messageText);
+        }
+    }
+
+}
+*/
+
+function updateMergeTag(e) {
+
+    // get field
+    for (var i = 0; i < mergeTags.length; i++) {
+        if (mergeTags[i].ids.indexOf(e.target.id) > -1) {
+
+            var newValue = e.target.value;
+
+            if (fullAddressFields.indexOf(e.target.id) > -1) {
+
+                if (isFullAddress) {
+                    var address1 = document.getElementById("address1").value || "";
+                    var address2 = document.getElementById("address2").value || "";
+                    var city = document.getElementById("city").value || "";
+                    var province = document.getElementById("province").value || "";
+                    var country = document.getElementById("country").value || "";
+                    var postalCode = document.getElementById("postal-code").value || "";
+
+                    newValue = address1;
+
+                    if (address1.length && (address2 || city || province || country || postalCode))
+                        newValue += " ";
+
+                    newValue += address2;
+
+                    if (address2 && (city || province || country || postalCode))
+                        newValue += " ";
+
+                    newValue += city;
+
+                    if (city && (province || country || postalCode))
+                        newValue += ", ";
+
+                    newValue += province;
+
+                    if (province && (country || postalCode))
+                        newValue += ", ";
+
+                    newValue += country;
+
+                    if (country && postalCode)
+                        newValue += " ";
+
+                    newValue += postalCode;
+                }
+
+            }
+
+            if (newValue === "")
+                newValue = mergeTags[i].tag;
+
+            var message = getProperMessageText();
+            replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, newValue);
+        }
+    }
+
+}
+
+function replaceTag(messageEl, cleanTag, value) {
+
+    var foundElements = messageEl.getElementsByClassName('tag-'+cleanTag);
+
+    for (var i = 0; i < foundElements.length; i++) {
+
+        foundElements[i].innerHTML = value;
+
+    }
+
+}
+
+function updateProperMessageText(message) {
+
+    if (document.getElementById('message'))
+        document.getElementById('message').innerHTML = message;
+    else
+        document.getElementById('fixed-message').innerHTML = message;
+
+}
+
+function getProperMessageText() {
+
+    if (document.getElementById('message'))
+        return document.getElementById('message').value;
+    else
+        return document.getElementById('fixed-message').innerHTML;
+
+}
+
+function getProperMessageElement() {
+    if (document.getElementById('message'))
+        return document.getElementById('message');
+    else
+        return document.getElementById('fixed-message');
+}
+
+/*function getTagLocations(tag, message) {
+
+    var start = 0;
+    var locations = [];
+    do {
+        var location = message.indexOf(tag, start)
+        
+        if (location > 0) {
+            locations.push(location);
+            start = location + tag.length;
+        }
+        else
+            break;
+    }
+    while(true);
+
+    return locations;
+
+}*/
 
 /**
  * Awesomeplete
