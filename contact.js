@@ -189,6 +189,8 @@ xhr.onload = function() {
         // merge-fields autofill
         var foundMergeTags = getAllMergeTags(message);
 
+        console.log(foundMergeTags);
+
         // did we find merge tags?
         if ( foundMergeTags && foundMergeTags.length > 0 ) {
 
@@ -205,7 +207,7 @@ xhr.onload = function() {
                         break;
                     case '*|ADDRESS|*':
                         if (isFullAddress)
-                            formIds = ['address1', 'address2', 'city', 'province', 'country', 'postal-code'];
+                            formIds = ['address1'];
                         else
                             formIds = ['postal-code'];
                         break;
@@ -213,7 +215,12 @@ xhr.onload = function() {
                         formIds = ['riding'];
                         break;
                     default:
-                        // TO-DO.. handle custom fields
+                        // handle custom fields
+                        for (var x = 0; x < customFields.length; x++) {
+                            if (getMergeTagOfCustomField(customFields[x].slug) == getCleanMergeTag(foundMergeTags[i])) {
+                                formIds = [customFields[x].slug];
+                            }
+                        }
                         break;
                 }
 
@@ -232,21 +239,6 @@ xhr.onload = function() {
 
             // add in placeholder spans
             updateProperMessageText(addMergeTagPlaceholders(mergeTags, message));
-
-            // add placeholder tags
-
-            // check for SENDER_NAME
-            // if ( foundMergeTags.indexOf("*|SENDER_NAME|*") > -1 ) {
-            //     document.getElementById('name').addEventListener('input', updateMergeTag, false);
-            //     mergeTags.push({
-            //         id:'name',
-            //         tag:'*|SENDER_NAME|*',
-            //         cleanTag: getCleanMergeTag('*|SENDER_NAME|*')
-            //     });
-            // }
-
-            // check for ADDRESS
-            // check for RIDING
         }
 
         // show form
@@ -300,10 +292,16 @@ function onFormSubmit(e) {
 
     var hasMissingFields = false;
     for (var i = 0; i < fields.length; i++) {
-        if (fields[i].getAttribute('id') == 'address'/* && document.getElementById('extra-address-fields').style.display == 'block'*/)
+        if (fields[i].getAttribute('id') == 'address' || fields[i].getAttribute('id') == 'address2')
             continue;
 
-        if (fields[i].value.trim() == "") {
+        if (fields[i].getAttribute('id') == 'message') {
+            if (!fields[i].innerHTML || fields[i].innerHTML.trim() == "") {
+                hasMissingFields = true;
+                break;
+            }
+        }
+        else if (!fields[i].value || fields[i].value.trim() == "") {
             hasMissingFields = true;
             break;
         }
@@ -731,7 +729,7 @@ function submitForm(fields) {
         customMessage = tweetMessage;
     }
     else if (fields[3]) {
-        customMessage = fields[3].value;
+        customMessage = fields[3].innerHTML;
     }
 
     // contact
@@ -910,45 +908,45 @@ function updateMergeTag(e) {
 
             var newValue = e.target.value;
 
-            if (fullAddressFields.indexOf(e.target.id) > -1) {
+            // if (fullAddressFields.indexOf(e.target.id) > -1) {
 
-                if (isFullAddress) {
-                    var address1 = document.getElementById("address1").value || "";
-                    var address2 = document.getElementById("address2").value || "";
-                    var city = document.getElementById("city").value || "";
-                    var province = document.getElementById("province").value || "";
-                    var country = document.getElementById("country").value || "";
-                    var postalCode = document.getElementById("postal-code").value || "";
+            //     if (isFullAddress) {
+            //         var address1 = document.getElementById("address1").value || "";
+            //         var address2 = document.getElementById("address2").value || "";
+            //         var city = document.getElementById("city").value || "";
+            //         var province = document.getElementById("province").value || "";
+            //         var country = document.getElementById("country").value || "";
+            //         var postalCode = document.getElementById("postal-code").value || "";
 
-                    newValue = address1;
+            //         newValue = address1;
 
-                    if (address1.length && (address2 || city || province || country || postalCode))
-                        newValue += " ";
+            //         if (address1.length && (address2 || city || province || country || postalCode))
+            //             newValue += " ";
 
-                    newValue += address2;
+            //         newValue += address2;
 
-                    if (address2 && (city || province || country || postalCode))
-                        newValue += " ";
+            //         if (address2 && (city || province || country || postalCode))
+            //             newValue += " ";
 
-                    newValue += city;
+            //         newValue += city;
 
-                    if (city && (province || country || postalCode))
-                        newValue += ", ";
+            //         if (city && (province || country || postalCode))
+            //             newValue += ", ";
 
-                    newValue += province;
+            //         newValue += province;
 
-                    if (province && (country || postalCode))
-                        newValue += ", ";
+            //         if (province && (country || postalCode))
+            //             newValue += ", ";
 
-                    newValue += country;
+            //         newValue += country;
 
-                    if (country && postalCode)
-                        newValue += " ";
+            //         if (country && postalCode)
+            //             newValue += " ";
 
-                    newValue += postalCode;
-                }
+            //         newValue += postalCode;
+            //     }
 
-            }
+            // }
 
             if (newValue === "")
                 newValue = mergeTags[i].tag;
@@ -995,6 +993,10 @@ function getProperMessageElement() {
         return document.getElementById('message');
     else
         return document.getElementById('fixed-message');
+}
+
+function getMergeTagOfCustomField(slug) {
+    return slug.toUpperCase().replace(/\-/g, '_');
 }
 
 /*function getTagLocations(tag, message) {
