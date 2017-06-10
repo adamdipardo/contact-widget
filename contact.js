@@ -1,11 +1,4 @@
-// setup google address field
-// var input = document.getElementById('address');
 var geocoder = new google.maps.Geocoder();
-/*var autocompleteOptions = {
-    types: ['geocode']
-};
-var autocomplete = new google.maps.places.Autocomplete(input, autocompleteOptions);
-var autocompleteService = new google.maps.places.AutocompleteService();*/
 var foundAddressContainer = document.getElementsByClassName('found-address')[0];
 var ridingInfoContainer = document.getElementsByClassName('found-riding')[0];
 var placesService = new google.maps.places.PlacesService(foundAddressContainer);
@@ -119,15 +112,6 @@ xhr.onload = function() {
             if (!responseJson.lockMessage && !isTwitter)
                 document.getElementById('message-label').innerHTML = 'Message';
         }
-        /*else {
-            if (!isFullAddress) {
-                document.getElementById('address-label').innerHTML = 'Postal Code';
-                document.getElementById('address').setAttribute('placeholder', 'Type to select a postal code');
-            }
-        }*/
-
-        // if (!isFullAddress)
-        //     document.getElementById('address-prompt').parentNode.removeChild(document.getElementById('address-prompt'));
 
         if (!isTwitter)
             submitButton.innerHTML = responseJson.sendText;
@@ -244,9 +228,6 @@ xhr.onload = function() {
         // show form
         document.getElementsByClassName('form')[0].classList.remove('hidden');
 
-        // if (isFullAddress)
-        //     document.getElementById('address-prompt').addEventListener('click', onAddressPromptClick, false);
-
         // set height of message field to match message
         if (!responseJson.lockMessage && !isTwitter)
             messageField.style.height = messageField.scrollHeight + 'px';
@@ -264,9 +245,6 @@ xhr.send();
 
 // event listenders
 document.getElementsByTagName('form')[0].addEventListener('submit', onFormSubmit, false);
-// document.getElementById('address').addEventListener('blur', onAddressBlur, false);
-// document.getElementById('address').addEventListener('keydown', onAddressKeyDown, true);
-// google.maps.event.addListener(autocomplete, 'place_changed', onPlaceChanged);
 document.getElementById('postal-code').addEventListener('input', onPostalCodeKeyUp, false);
 
 function onFormSubmit(e) {
@@ -340,14 +318,6 @@ function onFormSubmit(e) {
         errorStr += language == 'en' ? 'Please enter a valid postal code.' : 'Veuillez entrer un code postal valide.';
         setErrorMessage(errorStr);
     }
-    /* commented Jan 6 -- disabling autocomplete
-    else if (autocomplete.getPlace() == undefined && (isFullAddress && !placeId && document.getElementById('extra-address-fields').style.display == 'none')) {
-        var errorStr = '<i class="fa fa-exclamation-triangle"></i> ';
-        errorStr += language == 'en' ? 'Please select an address from the drop-down menu.' : 'Si votre adresse ne semble pas , <a id="error-address-prompt">cliquez ici pour essayer d\'entrer manuellement</a>';
-        // errorStr += language == 'en' ? 'Please select an address from the drop-down menu. If your address doesn\'t appear, <a id="error-address-prompt">click here</a> to try entering it manually.' : 'Si votre adresse ne semble pas , <a id="error-address-prompt">cliquez ici pour essayer d\'entrer manuellement</a>';
-        setErrorMessage(errorStr);
-        document.getElementById('error-address-prompt').addEventListener('click', onAddressPromptClick, false);
-    }*/
     else if (hasMissingCustomFields) {
         var errorStr = missingCustomFields.join('<br />');
         setErrorMessage(errorStr);
@@ -437,7 +407,6 @@ function onPostalCodeKeyUp(e) {
 
     if (/[a-zA-z][0-9][a-zA-z][ ]?[0-9][a-zA-z][0-9]/.test(e.target.value))
         getRidingAndCandidatesFromPostalCodeGeo(e.target.value);
-        // getRidingAndCandidatesFromPostalCode(e.target.value);
 }
 
 function onPlaceChanged(e) {
@@ -741,10 +710,6 @@ function submitForm(fields) {
         ridingId = getRidingIdFromName(document.getElementById('riding').value);
     }
 
-    // if (isTwitter) {
-    //     document.getElementsByClassName('twitter-button')[0].click();
-    // }
-
     var addressComponents = "";
     if (isFullAddress)
         addressComponents = '&address=' + address + '&city=' + city + '&province=' + province + '&country=' + country;
@@ -868,38 +833,6 @@ function getCleanMergeTag(tag) {
 
 }
 
-/*
-function updateMergeTag(e) {
-
-    // get field
-    for (var i = 0; i < mergeTags.tags.length; i++) {
-        if (mergeTags.tags[i].id == e.target.id) {
-            var messageText = getProperMessageText();
-
-            for (var x = mergeTags.tags[i].locations.length - 1; x >= 0 ; x--) {
-
-                messageText = messageText.slice(0, mergeTags.tags[i].locations[x]) + e.target.value + messageText.slice(mergeTags.tags[i].locations[x] + mergeTags.tags[i].length);
-
-                // update locations
-                for (var z = x + 1; z < mergeTags.tags[i].locations.length; z++) {
-                    console.log(z);
-                    console.log(mergeTags.tags[i].locations[z]);
-                    console.log(e.target.value.length);
-                    mergeTags.tags[i].locations[z] += e.target.value.length - mergeTags.tags[i].length;
-                    console.log(mergeTags.tags[i].locations[z]);
-                }
-            }
-
-            // messageText = messageText.replace(mergeTags.tags[i].tag, e.target.value);
-            mergeTags.tags[i].length = e.target.value.length;
-
-            updateProperMessageText(messageText);
-        }
-    }
-
-}
-*/
-
 function updateMergeTag(e) {
 
     // get field
@@ -907,46 +840,6 @@ function updateMergeTag(e) {
         if (mergeTags[i].ids.indexOf(e.target.id) > -1) {
 
             var newValue = e.target.value;
-
-            // if (fullAddressFields.indexOf(e.target.id) > -1) {
-
-            //     if (isFullAddress) {
-            //         var address1 = document.getElementById("address1").value || "";
-            //         var address2 = document.getElementById("address2").value || "";
-            //         var city = document.getElementById("city").value || "";
-            //         var province = document.getElementById("province").value || "";
-            //         var country = document.getElementById("country").value || "";
-            //         var postalCode = document.getElementById("postal-code").value || "";
-
-            //         newValue = address1;
-
-            //         if (address1.length && (address2 || city || province || country || postalCode))
-            //             newValue += " ";
-
-            //         newValue += address2;
-
-            //         if (address2 && (city || province || country || postalCode))
-            //             newValue += " ";
-
-            //         newValue += city;
-
-            //         if (city && (province || country || postalCode))
-            //             newValue += ", ";
-
-            //         newValue += province;
-
-            //         if (province && (country || postalCode))
-            //             newValue += ", ";
-
-            //         newValue += country;
-
-            //         if (country && postalCode)
-            //             newValue += " ";
-
-            //         newValue += postalCode;
-            //     }
-
-            // }
 
             if (newValue === "")
                 newValue = mergeTags[i].tag;
@@ -998,26 +891,6 @@ function getProperMessageElement() {
 function getMergeTagOfCustomField(slug) {
     return slug.toUpperCase().replace(/\-/g, '_');
 }
-
-/*function getTagLocations(tag, message) {
-
-    var start = 0;
-    var locations = [];
-    do {
-        var location = message.indexOf(tag, start)
-        
-        if (location > 0) {
-            locations.push(location);
-            start = location + tag.length;
-        }
-        else
-            break;
-    }
-    while(true);
-
-    return locations;
-
-}*/
 
 /**
  * Awesomeplete
