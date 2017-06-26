@@ -90,7 +90,7 @@ gulp.task('webserver', function() {
       directoryListing: false,
       port: 8001,
       host: '0.0.0.0',
-      proxies: [{source: '/api', target: 'http://l.dev.api.contact.ca'}]
+      proxies: [{source: '/api', target: 'http://127.0.0.1:8005'}]
     }));
 });
 

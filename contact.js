@@ -19,6 +19,7 @@ var tweetVia;
 var isFullAddress;
 var customFields;
 var mergeTags = [];
+var country;
 var fullAddressFields = ['address1','address2','city','province','country','postal-code'];
 
 // get query params
@@ -113,6 +114,11 @@ xhr.onload = function() {
                 document.getElementById('message-label').innerHTML = 'Message';
         }
 
+        if (responseJson.country == 'US' && language == 'en') {
+            document.getElementById('postal-code-label').innerHTML = 'ZIP Code';
+            document.getElementById('province-label').innerHTML = 'State';
+        }
+
         if (!isTwitter)
             submitButton.innerHTML = responseJson.sendText;
         else
@@ -132,6 +138,7 @@ xhr.onload = function() {
         districtName = responseJson.districtName || "Riding";
         tweetMessage = responseJson.tweetMessage;
         tweetVia = responseJson.tweetVia;
+        country = responseJson.country;
 
         // show contact?
         if (responseJson.contactText && !isTwitter) {
@@ -313,9 +320,14 @@ function onFormSubmit(e) {
         errorStr += language == 'en' ? 'Please enter a valid email address.' : 'Veuillez entrer un adresse électronique valide.';
         setErrorMessage(errorStr);
     }
-    else if (!/[a-zA-z][0-9][a-zA-z][ ]?[0-9][a-zA-z][0-9]/.test(fields[2].value)) {
+    else if (country == 'CA' && !/[a-zA-z][0-9][a-zA-z][ ]?[0-9][a-zA-z][0-9]/.test(fields[2].value)) {
         var errorStr = '<i class="fa fa-exclamation-triangle"></i> ';
         errorStr += language == 'en' ? 'Please enter a valid postal code.' : 'Veuillez entrer un code postal valide.';
+        setErrorMessage(errorStr);
+    }
+    else if (country == 'US' && !/[0-9]{5}/.test(fields[2].value)) {
+        var errorStr = '<i class="fa fa-exclamation-triangle"></i> ';
+        errorStr += language == 'en' ? 'Please enter a valid ZIP code.' : 'Veuillez entrer un code postal valide.';
         setErrorMessage(errorStr);
     }
     else if (hasMissingCustomFields) {
@@ -405,7 +417,9 @@ function onAddressKeyDown(e) {
 
 function onPostalCodeKeyUp(e) {
 
-    if (/[a-zA-z][0-9][a-zA-z][ ]?[0-9][a-zA-z][0-9]/.test(e.target.value))
+    if (country == 'CA' && /[a-zA-z][0-9][a-zA-z][ ]?[0-9][a-zA-z][0-9]/.test(e.target.value))
+        getRidingAndCandidatesFromPostalCodeGeo(e.target.value);
+    else if (country == 'US' && /[0-9]{5}/.test(e.target.value))
         getRidingAndCandidatesFromPostalCodeGeo(e.target.value);
 }
 
@@ -525,7 +539,7 @@ function onClickChangeRiding() {
             riding.setAttribute('data-list', ridings.join(', '));
             document.getElementsByClassName('change-riding')[0].style.display = 'block';
 
-            new Awesomplete(riding, {autoFirst: true});
+            new Awesomplete(riding, {autoFirst: true, minChars: 1});
             riding.setAttribute('placeholder', language == 'en' ? 'Type to select a ' + districtName : '');
             riding.focus();
 
@@ -654,7 +668,6 @@ function submitForm(fields) {
     var address = getAddress();
     var city = getCity();
     var province = getProvince();
-    var country = "CA";
     var postalCode = document.getElementById('postal-code').value;
     var latitude = matchedAddress.geometry.location.lat() || "";
     var longitude = matchedAddress.geometry.location.lng() || "";
@@ -740,6 +753,7 @@ function submitForm(fields) {
     var xhr = new XMLHttpRequest();
 
     xhr.open('POST', encodeURI('/api/campaigns/' + urlParams.campaign + '/entries/create'));
+    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
 
