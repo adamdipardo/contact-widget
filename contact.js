@@ -711,7 +711,7 @@ function submitForm(fields) {
         customMessage = tweetMessage;
     }
     else if (fields[3]) {
-        customMessage = fields[3].innerHTML;
+        customMessage = encodeURIComponent(fields[3].innerHTML);
     }
 
     // contact
@@ -817,9 +817,12 @@ function getAllMergeTags(message) {
 
     var filteredTags = [];
 
-    for (var i = 0 ; i < allTags.length; i++) {
-        if (filteredTags.indexOf(allTags[i]) == -1)
-            filteredTags.push(allTags[i]);
+    if (allTags != null)
+    {
+        for (var i = 0 ; i < allTags.length; i++) {
+            if (filteredTags.indexOf(allTags[i]) == -1)
+                filteredTags.push(allTags[i]);
+        }
     }
 
     return filteredTags;
