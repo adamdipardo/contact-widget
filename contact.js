@@ -513,7 +513,6 @@ function setRidingInfo(name, candidates, showLoading) {
             for (var i = 0; i < mergeTags.length; i++) {
                 if (mergeTags[i].tag == "*|RIDING|*") {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, ridingName);
-                    break;
                 }
                 if (mergeTags[i].tag == "*|RECIPIENT_NAME|*") {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, candidatesList.join(', '));
