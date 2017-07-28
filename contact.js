@@ -134,11 +134,11 @@ xhr.onload = function() {
         primaryColor = responseJson.customization.primaryColor;
         message = responseJson.message;
         successUrl = responseJson.successUrl;
-        repName = responseJson.repName;
-        districtName = responseJson.districtName || "Riding";
         tweetMessage = responseJson.tweetMessage;
         tweetVia = responseJson.tweetVia;
         country = responseJson.country;
+        repName = getPrimaryRepName(responseJson.lists);
+        districtName = getPrimaryDistrictName(responseJson.lists);
 
         // show contact?
         if (responseJson.contactText && !isTwitter) {
@@ -180,8 +180,6 @@ xhr.onload = function() {
         // merge-fields autofill
         var foundMergeTags = getAllMergeTags(message);
 
-        console.log(foundMergeTags);
-
         // did we find merge tags?
         if ( foundMergeTags && foundMergeTags.length > 0 ) {
 
@@ -203,6 +201,9 @@ xhr.onload = function() {
                             formIds = ['postal-code'];
                         break;
                     case '*|RIDING|*':
+                        formIds = ['riding'];
+                        break;
+                    case '*|RECIPIENT_NAME|*':
                         formIds = ['riding'];
                         break;
                     default:
@@ -513,6 +514,9 @@ function setRidingInfo(name, candidates, showLoading) {
                 if (mergeTags[i].tag == "*|RIDING|*") {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, ridingName);
                     break;
+                }
+                if (mergeTags[i].tag == "*|RECIPIENT_NAME|*") {
+                    replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, candidatesList.join(', '));
                 }
             }
         }
@@ -837,15 +841,12 @@ function addMergeTagPlaceholders(mergeTags, message) {
         message = message.replace(re, '<span class="tag-' + mergeTags[i].cleanTag + '">' + mergeTags[i].tag + '</span>');
     }
 
-    console.log(message);
-
     return message;
 
 }
 
 function getCleanMergeTag(tag) {
 
-    // console.log(tag.match(/\*\|(\w+)\|\*/g));
     return tag.match(/\*\|(\w+)\|\*/)[1];
 
 }
@@ -907,6 +908,27 @@ function getProperMessageElement() {
 
 function getMergeTagOfCustomField(slug) {
     return slug.toUpperCase().replace(/\-/g, '_');
+}
+
+function getPrimaryRepName(lists) {
+
+    return getPrimaryList(lists).repName;
+
+}
+
+function getPrimaryDistrictName(lists) {
+
+    return getPrimaryList(lists).districtName;
+
+}
+
+function getPrimaryList(lists) {
+
+    for (var i = 0; i < lists.length; i++) {
+        if (lists[i].isPrimary == true)
+            return lists[i];
+    }
+
 }
 
 /**
