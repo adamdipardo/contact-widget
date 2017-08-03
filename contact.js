@@ -475,7 +475,7 @@ function setMapFoundLocation(locationStr) {
 function updateHeight(extra) {
     if (typeof(extra) == "undefined")
         extra = 0;
-    window.parent.postMessage({height: document.body.scrollHeight + extra}, '*');
+    window.parent.postMessage({height: document.body.scrollHeight + extra, campaign: urlParams.campaign, isTwitter: isTwitter}, '*');
 }
 
 function setRidingInfo(name, candidates, showLoading) {
