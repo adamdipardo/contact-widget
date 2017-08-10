@@ -478,6 +478,65 @@ function updateHeight(extra) {
     window.parent.postMessage({height: document.body.scrollHeight + extra, campaign: urlParams.campaign, isTwitter: isTwitter}, '*');
 }
 
+function setMultipleRidingInfo(ridings, showLoading) {
+
+    if (showLoading === true) {
+        ridingInfoContainer.innerHTML = '<div class="loader"><div class="spinner address-spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div></div></div>';
+        var childrenArray = Array.prototype.slice.call(document.getElementsByClassName('address-spinner')[0].children);
+        for (var i = 0; i < childrenArray.length; i++)
+            childrenArray[i].style.backgroundColor = '#' + urlParams.loadingColor;
+    }
+    else {
+        var primaryRiding = getPrimaryList(ridings);
+
+        var candidatesList = [];
+        var candidatesTwitter = [];
+        ridingName = primaryRiding.riding;
+
+        for (var i = 0; i < primaryRiding.candidates.length; i++) {
+            candidatesList.push(primaryRiding.candidates[i].name);
+
+            if (primaryRiding.candidates[i].twitter)
+                candidatesTwitter.push(primaryRiding.candidates[i].twitter.indexOf('@') === 0 ? primaryRiding.candidates[i].twitter : '@' + primaryRiding.candidates[i].twitter);
+        }
+
+        recipients = [];
+        for (var i = 0; i < ridings.length; i++) {
+            for (var x = 0; x < ridings[i].candidates.length; x++) {
+                recipients.push(ridings[i].candidates[x].name);
+            }
+        }
+
+        if (primaryRiding.riding) {
+            var ridingLabel = language == 'en' ? 'Your ' + districtName : 'Circonscription';
+            var candidatesLabel = language == 'en' ? 'Your ' + repName : 'Candidat(e)s';
+            var changeLabel = '<a id="change-riding-link">' + (language == 'en' ? 'Incorrect ' + districtName + '? Click here to change it.' : 'Mauvaise circonscription? Indiquez la vôtre manuellement ici.') + '</a>';
+            ridingInfoContainer.innerHTML = '<span><span style="color: #'+primaryColor+'"><i class="fa fa-university"></i> '+ridingLabel+':</span> ' + primaryRiding.riding + ' ' + changeLabel + '</span><span><span style="color: #'+primaryColor+'"><i class="fa fa-users"></i> '+candidatesLabel+' </span> ' + candidatesList.join(', ') + '</span>';
+            document.getElementById('change-riding-link').addEventListener('click', onClickChangeRiding);
+
+            if (candidatesTwitter.length)
+                setTwitterURL(candidatesTwitter.join(','));
+            else
+                setTwitterURL();
+
+            // merge tag
+            for (var i = 0; i < mergeTags.length; i++) {
+                if (mergeTags[i].tag == "*|RIDING|*") {
+                    replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, ridingName);
+                }
+                if (mergeTags[i].tag == "*|RECIPIENT_NAME|*") {
+                    replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, recipients.join(', '));
+                }
+            }
+        }
+        else {
+            ridingInfoContainer.innerHTML = '';
+        }
+    }
+
+    updateHeight();
+}
+
 function setRidingInfo(name, candidates, showLoading) {
 
     if (showLoading === true) {
@@ -588,7 +647,7 @@ function getRidingIdFromName(ridingName) {
 
 function getRidingAndCandidates(lat, long) {
 
-    setRidingInfo('', [], true);
+    setMultipleRidingInfo([], true);
 
     var xhr = new XMLHttpRequest();
     xhr.open('GET', encodeURI('/api/campaigns/'+urlParams.campaign+'/ridings/'+lat+'/'+long+'/read'));
@@ -596,10 +655,10 @@ function getRidingAndCandidates(lat, long) {
         document.getElementsByClassName('loader')[0].classList.add('hidden');
         if (xhr.status === 200) {
             var responseJson = JSON.parse(xhr.responseText);
-            setRidingInfo(responseJson.riding, responseJson.candidates);
+            setMultipleRidingInfo(responseJson, false);
         }
         else {
-            setRidingInfo('', []);
+            setMultipleRidingInfo([], true);
         }
     }
     xhr.send();
