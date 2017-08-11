@@ -12,3 +12,4 @@ npm-debug.log*
 #build files
 build
 dist
+site

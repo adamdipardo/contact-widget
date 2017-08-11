@@ -19,12 +19,17 @@ gulp.task('sass:watch', function () {
 });
 
 gulp.task('html', function () {
-	return gulp.src('*.{html,php}')
+	return gulp.src(['*.{html,php}', '!index.html'])
 		.pipe(gulp.dest('build'));
 });
 
+gulp.task('site-html', function() {
+	return gulp.src('index.html')
+		.pipe(gulp.dest('site'));
+})
+
 gulp.task('html:watch', function () {
-	gulp.watch('*.{html,php}', ['html']);
+	gulp.watch('*.{html,php}', ['html', 'site-html']);
 });
 
 gulp.task('images', function () {
@@ -94,6 +99,18 @@ gulp.task('webserver', function() {
     }));
 });
 
+gulp.task('siteserver', function() {
+  gulp.src('site')
+    .pipe(webserver({
+      livereload: {
+      	port: 35000
+      },
+      directoryListing: false,
+      port: 8000,
+      host: '0.0.0.0'
+    }));
+});
+
 gulp.task('announce', function() {
 
 	if (argv.env == 'production')
@@ -105,6 +122,10 @@ gulp.task('announce', function() {
 
 });
 
-gulp.task('default', ['webserver', 'images', 'images:watch', 'html', 'html:watch', 'sass', 'sass:watch', 'scripts:watch']);
+gulp.task('default', ['webserver', 'siteserver', 'images', 'images:watch', 'html', 'site-html', 'html:watch', 'sass', 'sass:watch', 'scripts:watch'], function() {
+	if (argv.env != 'dev' && argv.env != 'production') {
+		console.log('\nReady! Now open http://127.0.0.1:8000 in your browser\n'.green);
+	}
+});
 gulp.task('build-only', ['announce', 'images', 'html', 'sass', 'widget']);
 gulp.task('create-dist', ['inline', 'widget-dist']);
