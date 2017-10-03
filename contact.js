@@ -91,8 +91,8 @@ xhr.onload = function() {
             document.getElementById('email-label').innerHTML = 'Courriel';
 
             if (isFullAddress) {
-                document.getElementById('address-label').innerHTML = 'Adresse';
-                document.getElementById('address').setAttribute('placeholder', 'Tapez pour sélectionner une adresse');
+                // document.getElementById('address-label').innerHTML = 'Adresse';
+                // document.getElementById('address').setAttribute('placeholder', 'Tapez pour sélectionner une adresse');
             }
             else {
                 document.getElementById('postal-code-label').innerHTML = 'Code Postal';
