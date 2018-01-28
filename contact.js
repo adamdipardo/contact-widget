@@ -492,18 +492,20 @@ function setMultipleRidingInfo(ridings, showLoading) {
         var candidatesList = [];
         var candidatesTwitter = [];
         ridingName = primaryRiding.riding;
+        var recipients = [];
 
-        for (var i = 0; i < primaryRiding.candidates.length; i++) {
-            candidatesList.push(primaryRiding.candidates[i].name);
+        if (typeof(primaryRiding.candidates) != 'undefined') {
+            for (var i = 0; i < primaryRiding.candidates.length; i++) {
+                candidatesList.push(primaryRiding.candidates[i].name);
 
-            if (primaryRiding.candidates[i].twitter)
-                candidatesTwitter.push(primaryRiding.candidates[i].twitter.indexOf('@') === 0 ? primaryRiding.candidates[i].twitter : '@' + primaryRiding.candidates[i].twitter);
-        }
+                if (primaryRiding.candidates[i].twitter)
+                    candidatesTwitter.push(primaryRiding.candidates[i].twitter.indexOf('@') === 0 ? primaryRiding.candidates[i].twitter : '@' + primaryRiding.candidates[i].twitter);
+            }
 
-        recipients = [];
-        for (var i = 0; i < ridings.length; i++) {
-            for (var x = 0; x < ridings[i].candidates.length; x++) {
-                recipients.push(ridings[i].candidates[x].name);
+            for (var i = 0; i < ridings.length; i++) {
+                for (var x = 0; x < ridings[i].candidates.length; x++) {
+                    recipients.push(ridings[i].candidates[x].name);
+                }
             }
         }
 
@@ -511,7 +513,11 @@ function setMultipleRidingInfo(ridings, showLoading) {
             var ridingLabel = language == 'en' ? 'Your ' + districtName : 'Circonscription';
             var candidatesLabel = language == 'en' ? 'Your ' + repName : 'Candidat(e)s';
             var changeLabel = '<a id="change-riding-link">' + (language == 'en' ? 'Incorrect ' + districtName + '? Click here to change it.' : 'Mauvaise circonscription? Indiquez la vôtre manuellement ici.') + '</a>';
-            ridingInfoContainer.innerHTML = '<span><span style="color: #'+primaryColor+'"><i class="fa fa-university"></i> '+ridingLabel+':</span> ' + primaryRiding.riding + ' ' + changeLabel + '</span><span><span style="color: #'+primaryColor+'"><i class="fa fa-users"></i> '+candidatesLabel+' </span> ' + candidatesList.join(', ') + '</span>';
+            ridingInfoHTML = '<span><span style="color: #'+primaryColor+'"><i class="fa fa-university"></i> '+ridingLabel+':</span> ' + primaryRiding.riding + ' ' + changeLabel + '</span>';
+            if (candidatesList.length) {
+                ridingInfoHTML += '<span><span style="color: #'+primaryColor+'"><i class="fa fa-users"></i> '+candidatesLabel+' </span> ' + candidatesList.join(', ') + '</span>';
+            }
+            ridingInfoContainer.innerHTML = ridingInfoHTML;
             document.getElementById('change-riding-link').addEventListener('click', onClickChangeRiding);
 
             if (candidatesTwitter.length)
@@ -524,7 +530,7 @@ function setMultipleRidingInfo(ridings, showLoading) {
                 if (mergeTags[i].tag == "*|RIDING|*") {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, ridingName);
                 }
-                if (mergeTags[i].tag == "*|RECIPIENT_NAME|*") {
+                if (mergeTags[i].tag == "*|RECIPIENT_NAME|*" && typeof(primaryRiding.candidates) != 'undefined') {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, recipients.join(', '));
                 }
             }
@@ -549,18 +555,25 @@ function setRidingInfo(name, candidates, showLoading) {
         var candidatesList = [];
         var candidatesTwitter = [];
         ridingName = name;
-        for (var i = 0; i < candidates.length; i++) {
-            candidatesList.push(candidates[i].name);
 
-            if (candidates[i].twitter)
-                candidatesTwitter.push(candidates[i].twitter.indexOf('@') === 0 ? candidates[i].twitter : '@' + candidates[i].twitter);
+        if (typeof(candidates) != 'undefined') {
+            for (var i = 0; i < candidates.length; i++) {
+                candidatesList.push(candidates[i].name);
+
+                if (candidates[i].twitter)
+                    candidatesTwitter.push(candidates[i].twitter.indexOf('@') === 0 ? candidates[i].twitter : '@' + candidates[i].twitter);
+            }
         }
 
         if (name) {
             var ridingLabel = language == 'en' ? 'Your ' + districtName : 'Circonscription';
             var candidatesLabel = language == 'en' ? 'Your ' + repName : 'Candidat(e)s';
             var changeLabel = '<a id="change-riding-link">' + (language == 'en' ? 'Incorrect ' + districtName + '? Click here to change it.' : 'Mauvaise circonscription? Indiquez la vôtre manuellement ici.') + '</a>';
-            ridingInfoContainer.innerHTML = '<span><span style="color: #'+primaryColor+'"><i class="fa fa-university"></i> '+ridingLabel+':</span> ' + name + ' ' + changeLabel + '</span><span><span style="color: #'+primaryColor+'"><i class="fa fa-users"></i> '+candidatesLabel+' </span> ' + candidatesList.join(', ') + '</span>';
+            var ridingInfoHTML = '<span><span style="color: #'+primaryColor+'"><i class="fa fa-university"></i> '+ridingLabel+':</span> ' + name + ' ' + changeLabel + '</span>';
+            if (candidatesList.length) {
+                 ridingInfoHTML += '<span><span style="color: #'+primaryColor+'"><i class="fa fa-users"></i> '+candidatesLabel+' </span> ' + candidatesList.join(', ') + '</span>';
+            }
+            ridingInfoContainer.innerHTML = ridingInfoHTML;
             document.getElementById('change-riding-link').addEventListener('click', onClickChangeRiding);
 
             if (candidatesTwitter.length)
@@ -573,7 +586,7 @@ function setRidingInfo(name, candidates, showLoading) {
                 if (mergeTags[i].tag == "*|RIDING|*") {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, ridingName);
                 }
-                if (mergeTags[i].tag == "*|RECIPIENT_NAME|*") {
+                if (mergeTags[i].tag == "*|RECIPIENT_NAME|*" && typeof(candidates) != 'undefined') {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, candidatesList.join(', '));
                 }
             }
@@ -1383,3 +1396,22 @@ if (typeof exports === 'object') {
 return _;
 
 }());
+
+// Keen
+!function(name,path,ctx){
+    var latest,prev=name!=='Keen'&&window.Keen?window.Keen:false;ctx[name]=ctx[name]||{ready:function(fn){var h=document.getElementsByTagName('head')[0],s=document.createElement('script'),w=window,loaded;s.onload=s.onerror=s.onreadystatechange=function(){if((s.readyState&&!(/^c|loade/.test(s.readyState)))||loaded){return}s.onload=s.onreadystatechange=null;loaded=1;latest=w.Keen;if(prev){w.Keen=prev}else{try{delete w.Keen}catch(e){w.Keen=void 0}}ctx[name]=latest;ctx[name].ready(fn)};s.async=1;s.src=path;h.parentNode.insertBefore(s,h)}}
+}('KeenAsync','https://d26b395fwzu5fz.cloudfront.net/keen-tracking-1.2.1.min.js',this);
+
+KeenAsync.ready(function(){
+    // Configure a client instance
+    // This is your actual Project ID and Write Key
+    var client = new KeenAsync({
+        projectId: '59e93172c9e77c0001573b07',
+        writeKey: '2AFDBED42D8FF5BD587E06A39EF0B27ACDB1F5D681553F38E640839BF85F72F5D35301F9BEC121A1073D6B3417387C4C5C899F45A22205DAC27403A2F381325B8601C33BC087A466424D56F6B25E15485160B387E1A3FD99AF1B67AC1EAEF140'
+    });
+
+    // Record an event
+    client.recordEvent('widgetview', {
+        campaign: urlParams.campaign
+    });
+});
