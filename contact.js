@@ -20,6 +20,7 @@ var isFullAddress;
 var customFields;
 var mergeTags = [];
 var country;
+var chooseLists = [];
 var fullAddressFields = ['address1','address2','city','province','country','postal-code'];
 
 // get query params
@@ -70,6 +71,11 @@ xhr.onload = function() {
         // set iframe content and default form values
         if (!isTwitter)
             formIntro.innerHTML = responseJson.introduction;
+
+        // can we choose lists?
+        if (responseJson.selectLists == true) {
+            chooseLists = responseJson.lists;
+        }
 
         if (responseJson.lockMessage && !isTwitter) {
             messageField.parentNode.removeChild(messageField);
@@ -311,6 +317,15 @@ function onFormSubmit(e) {
         }
     }
 
+    // check for selectable lists
+    var didNotChoose = false;
+    if (chooseLists.length > 1) {
+        var chosenLists = document.querySelectorAll('div.form-group.choose-lists > div input[type="checkbox"]:checked');
+        if (chosenLists.length == 0) {
+            didNotChoose = true;
+        }
+    }
+
     if (hasMissingFields) {
         var errorStr = '<i class="fa fa-exclamation-triangle"></i> ';
         errorStr += language == 'en' ? 'Please fill in all fields.' : 'Veuillez remplir tous les champs.';
@@ -333,6 +348,11 @@ function onFormSubmit(e) {
     }
     else if (hasMissingCustomFields) {
         var errorStr = missingCustomFields.join('<br />');
+        setErrorMessage(errorStr);
+    }
+    else if (didNotChoose == true) {
+        var errorStr = '<i class="fa fa-exclamation-triangle"></i> ';
+        errorStr += language == 'en' ? 'Please choose at least one person to send to.' : 'Please choose at least one person to send to.';
         setErrorMessage(errorStr);
     }
     else if (isFullAddress) {
@@ -480,6 +500,9 @@ function updateHeight(extra) {
 
 function setMultipleRidingInfo(ridings, showLoading) {
 
+    // hide the list chooser
+    document.querySelector('div.form-group.choose-lists').style.display = 'none';
+
     if (showLoading === true) {
         ridingInfoContainer.innerHTML = '<div class="loader"><div class="spinner address-spinner"><div class="rect1"></div><div class="rect2"></div><div class="rect3"></div><div class="rect4"></div></div></div>';
         var childrenArray = Array.prototype.slice.call(document.getElementsByClassName('address-spinner')[0].children);
@@ -532,6 +555,20 @@ function setMultipleRidingInfo(ridings, showLoading) {
                 }
                 if (mergeTags[i].tag == "*|RECIPIENT_NAME|*" && typeof(primaryRiding.candidates) != 'undefined') {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, recipients.join(', '));
+                }
+            }
+
+            // can we choose lists?
+            if (chooseLists.length > 1) {
+                var chooseListsContainer = document.querySelector('div.form-group.choose-lists > div');
+                chooseListsContainer.innerHTML = '';
+                chooseListsContainer.parentNode.style.display = 'block';
+
+                for (var i = 0; i < chooseLists.length; i++) {
+                    var checkbox = document.createElement('div');
+                    checkbox.classList.add('checkbox');
+                    checkbox.innerHTML = '<label><input type="checkbox" name="selectLists" value="' + chooseLists[i].id + '" checked="checked">' + chooseLists[i].label + '</label></div>';
+                    chooseListsContainer.appendChild(checkbox);
                 }
             }
         }
@@ -818,6 +855,15 @@ function submitForm(fields) {
         }
     }
 
+    // get chosen lists
+    var chosenLists = [];
+    if (chooseLists.length > 1) {
+        var checkBoxes = document.querySelectorAll('div.form-group.choose-lists > div input[type="checkbox"]:checked');
+        for (var i = 0; i < checkBoxes.length; i++) {
+            chosenLists.push(checkBoxes[i].value);
+        }
+    }
+
     // send alert
     var alertXhr = new XMLHttpRequest();
     alertXhr.open('POST', encodeURI('/api/campaigns/' + urlParams.campaign + '/entries/alerts/create'));
@@ -853,7 +899,7 @@ function submitForm(fields) {
         }
     };
 
-    xhr.send(encodeURI('name=' + fields[0].value + '&email=' + fields[1].value + addressComponents + '&postalCode=' + postalCode + '&canContact=' + contactOptIn + '&lat=' + latitude + '&long=' + longitude + '&ridingId=' + ridingId + (customMessage ? '&message=' + customMessage : '') + '&type=' + (isTwitter ? 'twitter' : 'email') + '&fields=' + JSON.stringify(filteredFields)));
+    xhr.send(encodeURI('name=' + fields[0].value + '&email=' + fields[1].value + addressComponents + '&postalCode=' + postalCode + '&canContact=' + contactOptIn + '&lat=' + latitude + '&long=' + longitude + '&ridingId=' + ridingId + (customMessage ? '&message=' + customMessage : '') + '&type=' + (isTwitter ? 'twitter' : 'email') + '&fields=' + JSON.stringify(filteredFields) + '&lists=' + JSON.stringify(chosenLists)));
 }
 
 if (isTwitter) {
