@@ -352,7 +352,7 @@ function onFormSubmit(e) {
     }
     else if (didNotChoose == true) {
         var errorStr = '<i class="fa fa-exclamation-triangle"></i> ';
-        errorStr += language == 'en' ? 'Please choose at least one person to send to.' : 'Please choose at least one person to send to.';
+        errorStr += language == 'en' ? 'Please choose at least one list to send to.' : 'Please choose at least one list to send to.';
         setErrorMessage(errorStr);
     }
     else if (isFullAddress) {
