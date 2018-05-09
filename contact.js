@@ -517,28 +517,44 @@ function setMultipleRidingInfo(ridings, showLoading) {
         ridingName = primaryRiding.riding;
         var recipients = [];
 
-        if (typeof(primaryRiding.candidates) != 'undefined') {
-            for (var i = 0; i < primaryRiding.candidates.length; i++) {
-                candidatesList.push(primaryRiding.candidates[i].name);
-
-                if (primaryRiding.candidates[i].twitter)
-                    candidatesTwitter.push(primaryRiding.candidates[i].twitter.indexOf('@') === 0 ? primaryRiding.candidates[i].twitter : '@' + primaryRiding.candidates[i].twitter);
-            }
-
+        if (chooseLists.length > 1) {
             for (var i = 0; i < ridings.length; i++) {
                 for (var x = 0; x < ridings[i].candidates.length; x++) {
+                    candidatesList.push(ridings[i].candidates[x].name);
                     recipients.push(ridings[i].candidates[x].name);
+                }
+                addRidingCandidatesToList(chooseLists, ridings[i]);
+            }
+        }
+        else {
+            if (typeof(primaryRiding.candidates) != 'undefined') {
+                for (var i = 0; i < primaryRiding.candidates.length; i++) {
+                    candidatesList.push(primaryRiding.candidates[i].name);
+
+                    if (primaryRiding.candidates[i].twitter)
+                        candidatesTwitter.push(primaryRiding.candidates[i].twitter.indexOf('@') === 0 ? primaryRiding.candidates[i].twitter : '@' + primaryRiding.candidates[i].twitter);
+                }
+
+                for (var i = 0; i < ridings.length; i++) {
+                    for (var x = 0; x < ridings[i].candidates.length; x++) {
+                        recipients.push(ridings[i].candidates[x].name);
+                    }
                 }
             }
         }
 
         if (primaryRiding.riding) {
             var ridingLabel = language == 'en' ? 'Your ' + districtName : 'Circonscription';
-            var candidatesLabel = language == 'en' ? 'Your ' + repName : 'Candidat(e)s';
+            if (chooseLists.length > 1) {
+                var candidatesLabel = language == 'en' ? 'Your message will be sent to' : 'Candidat(e)s';
+            }
+            else {
+                var candidatesLabel = language == 'en' ? 'Your ' + repName : 'Candidat(e)s';
+            }
             var changeLabel = '<a id="change-riding-link">' + (language == 'en' ? 'Incorrect ' + districtName + '? Click here to change it.' : 'Mauvaise circonscription? Indiquez la vôtre manuellement ici.') + '</a>';
             ridingInfoHTML = '<span><span style="color: #'+primaryColor+'"><i class="fa fa-university"></i> '+ridingLabel+':</span> ' + primaryRiding.riding + ' ' + changeLabel + '</span>';
             if (candidatesList.length) {
-                ridingInfoHTML += '<span><span style="color: #'+primaryColor+'"><i class="fa fa-users"></i> '+candidatesLabel+' </span> ' + candidatesList.join(', ') + '</span>';
+                ridingInfoHTML += '<span><span style="color: #'+primaryColor+'"><i class="fa fa-users"></i> '+candidatesLabel+' </span> <span id="candidates-list">' + candidatesList.join(', ') + '</span></span>';
             }
             ridingInfoContainer.innerHTML = ridingInfoHTML;
             document.getElementById('change-riding-link').addEventListener('click', onClickChangeRiding);
@@ -569,6 +585,30 @@ function setMultipleRidingInfo(ridings, showLoading) {
                     checkbox.classList.add('checkbox');
                     checkbox.innerHTML = '<label><input type="checkbox" name="selectLists" value="' + chooseLists[i].id + '" checked="checked">' + chooseLists[i].label + '</label></div>';
                     chooseListsContainer.appendChild(checkbox);
+                }
+
+                var listBoxes = document.querySelectorAll('div.form-group.choose-lists input[type="checkbox"]');
+                for (var i = 0; i < listBoxes.length; i++) {
+                    listBoxes[i].addEventListener('change', function(e) {
+                        var newRecipients = [];
+                        for (var x = 0; x < listBoxes.length; x++) {
+                            if (listBoxes[x].checked) {
+                                for (var z = 0; z < chooseLists.length; z++) {
+                                    if (chooseLists[z].id == listBoxes[x].value) {
+                                        for (var y = 0; y < chooseLists[z].candidates.length; y++) {
+                                            newRecipients.push(chooseLists[z].candidates[y].name);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        document.getElementById('candidates-list').innerHTML = newRecipients.join(', ');
+                        for (var x = 0; x < mergeTags.length; x++) {
+                            if (mergeTags[x].tag == "*|RECIPIENT_NAME|*" && typeof(primaryRiding.candidates) != 'undefined') {
+                                replaceTag(getProperMessageElement(), mergeTags[x].cleanTag, newRecipients.join(', '));
+                            }
+                        }
+                    });
                 }
             }
         }
@@ -1044,6 +1084,20 @@ function getPrimaryList(lists) {
     for (var i = 0; i < lists.length; i++) {
         if (lists[i].isPrimary == true)
             return lists[i];
+    }
+
+}
+
+function addRidingCandidatesToList(lists, riding) {
+
+    for (var i = 0; i < lists.length; i++) {
+
+        if (lists[i].id === riding.listId) {
+
+            lists[i].candidates = riding.candidates;
+
+        }
+
     }
 
 }
