@@ -536,8 +536,10 @@ function setMultipleRidingInfo(ridings, showLoading) {
                 }
 
                 for (var i = 0; i < ridings.length; i++) {
-                    for (var x = 0; x < ridings[i].candidates.length; x++) {
-                        recipients.push(ridings[i].candidates[x].name);
+                    if (ridings[i].candidates) {
+                        for (var x = 0; x < ridings[i].candidates.length; x++) {
+                            recipients.push(ridings[i].candidates[x].name);
+                        }
                     }
                 }
             }
