@@ -548,10 +548,10 @@ function setMultipleRidingInfo(ridings, showLoading) {
         if (primaryRiding.riding) {
             var ridingLabel = language == 'en' ? 'Your ' + districtName : 'Circonscription';
             if (chooseLists.length > 1) {
-                var candidatesLabel = language == 'en' ? 'Your message will be sent to' : 'Candidat(e)s';
+                var candidatesLabel = language == 'en' ? 'Your message will be sent to' : 'Député(e)';
             }
             else {
-                var candidatesLabel = language == 'en' ? 'Your ' + repName : 'Candidat(e)s';
+                var candidatesLabel = language == 'en' ? 'Your ' + repName : 'Député(e)';
             }
             var changeLabel = '<a id="change-riding-link">' + (language == 'en' ? 'Incorrect ' + districtName + '? Click here to change it.' : 'Mauvaise circonscription? Indiquez la vôtre manuellement ici.') + '</a>';
             ridingInfoHTML = '<span><span style="color: #'+primaryColor+'"><i class="fa fa-university"></i> '+ridingLabel+':</span> ' + primaryRiding.riding + ' ' + changeLabel + '</span>';
@@ -974,7 +974,7 @@ function replaceTwitterMergeTags(tweetTo, tweetMessage) {
 
 function getAllMergeTags(message) {
 
-    var mergeRegex = /(\*\|\w+\|\*)/g;
+    var mergeRegex = /(\*\|\S+\|\*)/g;
 
     var allTags = message.match(mergeRegex);
 
@@ -1006,7 +1006,7 @@ function addMergeTagPlaceholders(mergeTags, message) {
 
 function getCleanMergeTag(tag) {
 
-    return tag.match(/\*\|(\w+)\|\*/)[1];
+    return tag.match(/\*\|(\S+)\|\*/)[1];
 
 }
 
