@@ -198,18 +198,22 @@ xhr.onload = function() {
                 // figure out form elements associated with tag
                 switch(foundMergeTags[i]) {
                     case '*|SENDER_NAME|*':
+                    case '*|NOM_DE_LEXPEDITEUR|*':
                         formIds = ['name'];
                         break;
                     case '*|ADDRESS|*':
+                    case '*|ADRESSE|*':
                         if (isFullAddress)
                             formIds = ['address1'];
                         else
                             formIds = ['postal-code'];
                         break;
                     case '*|RIDING|*':
+                    case '*|CIRSCONSCRIPTION|*':
                         formIds = ['riding'];
                         break;
                     case '*|RECIPIENT_NAME|*':
+                    case '*|NOM_DU_DESTINATAIRE|*':
                         formIds = ['riding'];
                         break;
                     default:
@@ -568,10 +572,10 @@ function setMultipleRidingInfo(ridings, showLoading) {
 
             // merge tag
             for (var i = 0; i < mergeTags.length; i++) {
-                if (mergeTags[i].tag == "*|RIDING|*") {
+                if (mergeTags[i].tag == "*|RIDING|*" || mergeTags[i].tag == "*|CIRSCONSCRIPTION|*") {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, ridingName);
                 }
-                if (mergeTags[i].tag == "*|RECIPIENT_NAME|*" && typeof(primaryRiding.candidates) != 'undefined') {
+                if ((mergeTags[i].tag == "*|RECIPIENT_NAME|*" || mergeTags[i].tag == "*|NOM_DU_DESTINATAIRE|*") && typeof(primaryRiding.candidates) != 'undefined') {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, recipients.join(', '));
                 }
             }
@@ -606,7 +610,7 @@ function setMultipleRidingInfo(ridings, showLoading) {
                         }
                         document.getElementById('candidates-list').innerHTML = newRecipients.join(', ');
                         for (var x = 0; x < mergeTags.length; x++) {
-                            if (mergeTags[x].tag == "*|RECIPIENT_NAME|*" && typeof(primaryRiding.candidates) != 'undefined') {
+                            if ((mergeTags[x].tag == "*|RECIPIENT_NAME|*" || mergeTags[x].tag == "*|NOM_DU_DESTINATAIRE|*")&& typeof(primaryRiding.candidates) != 'undefined') {
                                 replaceTag(getProperMessageElement(), mergeTags[x].cleanTag, newRecipients.join(', '));
                             }
                         }
@@ -662,10 +666,10 @@ function setRidingInfo(name, candidates, showLoading) {
 
             // merge tag
             for (var i = 0; i < mergeTags.length; i++) {
-                if (mergeTags[i].tag == "*|RIDING|*") {
+                if (mergeTags[i].tag == "*|RIDING|*" || mergeTags[i].tag == "*|CIRSCONSCRIPTION|*") {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, ridingName);
                 }
-                if (mergeTags[i].tag == "*|RECIPIENT_NAME|*" && typeof(candidates) != 'undefined') {
+                if ((mergeTags[i].tag == "*|RECIPIENT_NAME|*" || mergeTags[i].tag == "*|NOM_DU_DESTINATAIRE|*") && typeof(candidates) != 'undefined') {
                     replaceTag(getProperMessageElement(), mergeTags[i].cleanTag, candidatesList.join(', '));
                 }
             }
