@@ -63,7 +63,12 @@ gulp.task('inline', function() {
 });
 
 gulp.task('widget', ['scripts'], function() {
-	if (argv.env == 'production') {
+	if (argv.env == 'production' && argv.az) {
+		gulp.src('build/widget.js')
+			.pipe(insert.prepend('var HOST_URL = "https://az.widget.activeengage.ca", APP_URL = "";\n'))
+			.pipe(gulp.dest('build'));
+	}
+	else if (argv.env == 'production') {
 		gulp.src('build/widget.js')
 			.pipe(insert.prepend('var HOST_URL = "https://contact.activeengage.ca", APP_URL = "/widget";\n'))
 			.pipe(gulp.dest('build'));
